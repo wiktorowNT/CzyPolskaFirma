@@ -10,7 +10,12 @@ import { Label } from "@/components/ui/label"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Plus, CheckCircle, Upload } from "lucide-react"
 
-export function ReportForm() {
+interface ReportFormProps {
+  companyName?: string
+  children?: React.ReactNode
+}
+
+export function ReportForm({ companyName, children }: ReportFormProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [formData, setFormData] = useState({
@@ -20,6 +25,13 @@ export function ReportForm() {
     email: "",
     attachment: null as File | null,
   })
+
+  // Set initial brand name if provided
+  React.useEffect(() => {
+    if (companyName && !formData.brandName) {
+      setFormData(prev => ({ ...prev, brandName: companyName }))
+    }
+  }, [companyName, formData.brandName])
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -39,60 +51,55 @@ export function ReportForm() {
     setTimeout(() => {
       setIsOpen(false)
       setIsSubmitted(false)
-      setFormData({ brandName: "", sourceLink: "", comment: "", email: "", attachment: null })
+      setFormData({ brandName: companyName || "", sourceLink: "", comment: "", email: "", attachment: null })
     }, 2000)
   }
 
-  return (
-    <section className="py-20 bg-slate-50">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-        <h2 className="text-3xl lg:text-4xl font-bold text-slate-900 mb-6">Zgłoś markę lub poprawkę</h2>
-        <p className="text-xl text-slate-600 mb-8">Pomóż nam rozwijać bazę. Podaj nazwę i link do źródła.</p>
+  const isCompanyProfile = !!companyName
 
-        <Dialog open={isOpen} onOpenChange={setIsOpen}>
-          <DialogTrigger asChild>
-            <Button className="bg-red-600 hover:bg-red-700 text-white inline-flex items-center gap-2">
-              <Plus className="h-5 w-5" />
-              Zgłoś markę
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Zgłoś markę lub poprawkę</DialogTitle>
-            </DialogHeader>
-
+  function renderFormContent() {
+    return (
+      <>
             {isSubmitted ? (
               <div className="text-center py-8">
                 <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-slate-900 mb-2">Dziękujemy za zgłoszenie!</h3>
-                <p className="text-slate-600">Sprawdzimy podane informacje i dodamy je do bazy.</p>
+                <h3 className="text-lg font-semibold text-slate-900 mb-2">
+                  {isCompanyProfile ? "Dziękujemy za zgłoszenie indeksu!" : "Dziękujemy za zgłoszenie!"}
+                </h3>
+                <p className="text-slate-600">
+                  {isCompanyProfile 
+                    ? "Sprawdzimy podane informacje i zaktualizujemy indeks polskości." 
+                    : "Sprawdzimy podane informacje i dodamy je do bazy."
+                  }
+                </p>
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="space-y-2">
                   <Label htmlFor="brandName" className="text-sm font-medium text-slate-700">
-                    Nazwa marki *
+                    {isCompanyProfile ? "Nazwa firmy *" : "Nazwa marki *"}
                   </Label>
                   <Input
                     id="brandName"
                     value={formData.brandName}
                     onChange={(e) => setFormData({ ...formData, brandName: e.target.value })}
-                    placeholder="np. Przykładowa Marka"
+                    placeholder={isCompanyProfile ? companyName : "np. Przykładowa Marka"}
                     className="w-full"
+                    disabled={isCompanyProfile}
                     required
                   />
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="sourceLink" className="text-sm font-medium text-slate-700">
-                    Link do źródła *
+                    {isCompanyProfile ? "Link do źródła informacji o firmie *" : "Link do źródła *"}
                   </Label>
                   <Input
                     id="sourceLink"
                     type="url"
                     value={formData.sourceLink}
                     onChange={(e) => setFormData({ ...formData, sourceLink: e.target.value })}
-                    placeholder="https://..."
+                    placeholder={isCompanyProfile ? "https://... (KRS, strona firmy, raport roczny)" : "https://..."}
                     className="w-full"
                     required
                   />
@@ -124,13 +131,17 @@ export function ReportForm() {
 
                 <div className="space-y-2">
                   <Label htmlFor="comment" className="text-sm font-medium text-slate-700">
-                    Komentarz
+                    {isCompanyProfile ? "Informacje o firmie" : "Komentarz"}
                   </Label>
                   <Textarea
                     id="comment"
                     value={formData.comment}
                     onChange={(e) => setFormData({ ...formData, comment: e.target.value })}
-                    placeholder="Dodatkowe informacje..."
+                    placeholder={
+                      isCompanyProfile 
+                        ? "Opisz strukturę właścicielską, siedzibę, podatki, produkcję, zatrudnienie..." 
+                        : "Dodatkowe informacje..."
+                    }
                     rows={3}
                     className="w-full resize-none"
                   />
@@ -149,18 +160,65 @@ export function ReportForm() {
                     className="w-full"
                   />
                   <p className="text-xs text-slate-500">
-                    Podaj email, aby otrzymać powiadomienie gdy firma zostanie dodana lub zaktualizowana.
+                    {isCompanyProfile 
+                      ? "Podaj email, aby otrzymać powiadomienie gdy indeks zostanie zaktualizowany."
+                      : "Podaj email, aby otrzymać powiadomienie gdy firma zostanie dodana lub zaktualizowana."
+                    }
                   </p>
                 </div>
 
                 <Button type="submit" className="w-full bg-red-600 hover:bg-red-700 text-white">
-                  Wyślij zgłoszenie
+                  {isCompanyProfile ? "Wyślij informacje o firmie" : "Wyślij zgłoszenie"}
                 </Button>
               </form>
             )}
+      </>
+    )
+  }
+
+  return (
+    <>
+      {!isCompanyProfile && (
+        <section className="py-20 bg-slate-50">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 className="text-3xl lg:text-4xl font-bold text-slate-900 mb-6">Zgłoś markę lub poprawkę</h2>
+            <p className="text-xl text-slate-600 mb-8">Pomóż nam rozwijać bazę. Podaj nazwę i link do źródła.</p>
+
+            <Dialog open={isOpen} onOpenChange={setIsOpen}>
+              <DialogTrigger asChild>
+                <Button className="bg-red-600 hover:bg-red-700 text-white inline-flex items-center gap-2">
+                  <Plus className="h-5 w-5" />
+                  Zgłoś markę
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>Zgłoś markę lub poprawkę</DialogTitle>
+                </DialogHeader>
+                {renderFormContent()}
+              </DialogContent>
+            </Dialog>
+          </div>
+        </section>
+      )}
+
+      {isCompanyProfile && (
+        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+          <DialogTrigger asChild>
+            {children || (
+              <Button variant="outline" className="bg-transparent">
+                Zgłoś poprawkę
+              </Button>
+            )}
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Zgłoś indeks polskości dla {companyName}</DialogTitle>
+            </DialogHeader>
+            {renderFormContent()}
           </DialogContent>
         </Dialog>
-      </div>
-    </section>
+      )}
+    </>
   )
 }
