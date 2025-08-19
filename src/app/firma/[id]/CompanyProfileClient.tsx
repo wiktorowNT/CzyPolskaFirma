@@ -173,6 +173,22 @@ export default function CompanyProfileClient({ params, company }: { params: { id
             </div>
           </div>
 
+          {/* Report Error Button */}
+          <div className="bg-white rounded-lg shadow-sm border p-8 mb-8">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold text-slate-900 mb-2">Masz informacje o tej firmie?</h3>
+                <p className="text-slate-600">Pomóż nam obliczyć dokładny indeks polskości</p>
+              </div>
+              <ReportForm companyName={company.brand}>
+                <Button variant="outline" className="flex items-center gap-2 bg-transparent">
+                  <AlertTriangle className="w-4 w-4" />
+                  Zgłoś indeks polskości
+                </Button>
+              </ReportForm>
+            </div>
+          </div>
+
           {/* Index Breakdown */}
           <div className="bg-white rounded-lg shadow-sm p-8 mb-8">
             <h2 className="text-2xl font-bold text-slate-900 mb-6">Rozbicie Indeksu polskości</h2>
