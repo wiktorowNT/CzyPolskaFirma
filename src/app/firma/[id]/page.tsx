@@ -81,7 +81,8 @@ function getCompanyData(id: string): CompanyDetail | null {
 }
 
 export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
-  const company = getCompanyData(params.id)
+  const resolvedParams = await Promise.resolve(params)
+  const company = getCompanyData(resolvedParams.id)
 
   if (!company) {
     return {
